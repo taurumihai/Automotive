@@ -10,6 +10,7 @@ import tauru.springframework.WebApp.utilitare.OroErrors;
 import tauru.springframework.WebApp.utilitare.StringUtils;
 
 
+import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,7 +28,7 @@ public class HomeController {
     }
 
     @RequestMapping("/login")
-    public String view (String username, String password, Model model) {
+    public String view (String username, String password, Model model, HttpSession session) {
 
         List<OroErrors> oroErrorsList = new ArrayList<>();
 
@@ -42,6 +43,7 @@ public class HomeController {
 
             loggedUser.setUserIsLoggedIn(Boolean.TRUE);
             userService.saveUSer(loggedUser);
+            session.setAttribute("loggedUser", loggedUser);
             return "welcome";
 
         } else {
@@ -54,7 +56,7 @@ public class HomeController {
     }
 
     @RequestMapping("/register")
-    public String viewRegister(String username, String password, String email, Model model){
+    public String viewRegister(String username, String password, String email, Model model, HttpSession session){
 
         if (username == null || password == null || email == null) {
 
@@ -94,6 +96,7 @@ public class HomeController {
             User user = new User(username, password, email);
             user.setUserIsLoggedIn(Boolean.TRUE);
             userService.saveUSer(user);
+            session.setAttribute("loggedUser", user);
             return "welcome";
         }
 

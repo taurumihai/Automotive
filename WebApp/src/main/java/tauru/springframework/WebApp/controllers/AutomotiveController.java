@@ -11,6 +11,7 @@ import tauru.springframework.WebApp.services.UserService;
 import tauru.springframework.WebApp.utilitare.OroErrors;
 import tauru.springframework.WebApp.utilitare.StringUtils;
 
+import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,21 +33,23 @@ public class AutomotiveController {
     }
 
     @RequestMapping("/drivers")
-    public String viewDriversView(String username,
-                                  String firstName,
+    public String viewDriversView(String firstName,
                                   String lastName,
                                   String age,
-                                  String experienceAge, Model model)
+                                  String experienceAge, Model model, HttpSession session)
     {
 
-        List<OroErrors> errorsList = new ArrayList<>();
-        if (StringUtils.isNullOrEmpty(username) && StringUtils.isNullOrEmpty(firstName)
-            && StringUtils.isNullOrEmpty(lastName) && StringUtils.isNullOrEmpty(age) && StringUtils.isNullOrEmpty(experienceAge))
-        {
-            return "drivers";
+        User loggedUser = (User) session.getAttribute("loggedUser");
+        Boolean driverIsRegistered = Boolean.FALSE;
+
+        if (loggedUser != null && loggedUser.getDriver() != null ) {
+
+            driverIsRegistered = Boolean.TRUE;
+
         }
 
-        User loggedUser = userService.findUserByUserName(username);
+        List<OroErrors> errorsList = new ArrayList<>();
+
         Boolean success = Boolean.FALSE;
 
         if (loggedUser != null)
@@ -54,10 +57,6 @@ public class AutomotiveController {
             model.addAttribute("loggedUser", loggedUser);
         }
 
-        if (StringUtils.isNullOrEmpty(username))
-        {
-            errorsList.add(new OroErrors("Completati numele de utilizator"));
-        }
         if (StringUtils.isNullOrEmpty(firstName))
         {
             errorsList.add(new OroErrors("Completati numele dvs."));
@@ -71,7 +70,7 @@ public class AutomotiveController {
             errorsList.add(new OroErrors("Completati varsta dvs"));
         }
 
-        if (Integer.valueOf(age) < 18)
+        if (StringUtils.isNullOrEmpty(age) || Integer.valueOf(age) < 18)
         {
             errorsList.add(new OroErrors("Varsta minima este de 18 ani"));
         }
@@ -88,18 +87,20 @@ public class AutomotiveController {
             loggedUser.setLastName(lastName);
 
             Driver newDrivre = new Driver();
+
             newDrivre.setAge(Integer.valueOf(age));
             newDrivre.setExperienceYears(Integer.valueOf(experienceAge));
             newDrivre.setIsRegistered(Boolean.TRUE);
 
             loggedUser.setDriver(newDrivre);
+            driverIsRegistered =  Boolean.TRUE;
 
             driverService.saveDriver(newDrivre);
             userService.saveUSer(loggedUser);
             success = Boolean.TRUE;
-            model.addAttribute("driver", newDrivre);
         }
 
+        model.addAttribute("driverIsRegistered", driverIsRegistered);
         model.addAttribute("success", success);
 
         return "drivers";
